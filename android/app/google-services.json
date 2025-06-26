@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "735475675715",
+    "project_id": "smart-645d6",
+    "storage_bucket": "smart-645d6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:735475675715:android:dfd3d5856c26165bb25af6",
+        "android_client_info": {
+          "package_name": "com.example.smart_entregas"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAcKQVxgFnEKktwe5igz4gURcpduWjC6ig"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

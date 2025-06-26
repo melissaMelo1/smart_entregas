@@ -1,0 +1,313 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:smart_entregas/models/delivery.dart';
+import 'package:smart_entregas/services/delivery_service.dart';
+import 'package:smart_entregas/services/user_session.dart';
+import 'package:smart_entregas/theme/app_theme.dart';
+import 'package:smart_entregas/widgets/profile_button.dart';
+
+class LogisticPage extends StatefulWidget {
+  const LogisticPage({super.key});
+
+  @override
+  State<LogisticPage> createState() => _LogisticPageState();
+}
+
+class _LogisticPageState extends State<LogisticPage> {
+  final DeliveryService _deliveryService = Get.put(DeliveryService());
+  final UserSession _userSession = Get.find<UserSession>();
+  final RxList<Delivery> _entregas = <Delivery>[].obs;
+  final RxBool _isLoading = true.obs;
+  final RxList<String> _statusFiltro = <String>['Todos'].obs;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDeliveries();
+  }
+
+  void _loadDeliveries() {
+    _isLoading.value = true;
+
+    // Inscreve-se no stream de entregas do usuário logado (logística)
+    _deliveryService.getUserDeliveries().listen(
+      (deliveries) {
+        _entregas.value = deliveries;
+        _isLoading.value = false;
+      },
+      onError: (error) {
+        print('Erro ao carregar entregas: $error');
+        _isLoading.value = false;
+        Get.snackbar(
+          'Erro',
+          'Não foi possível carregar as entregas',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      },
+    );
+  }
+
+  void _verDetalhes(Delivery entrega) {
+    // Passar o objeto de entrega sem a flag de somente leitura para logístico
+    Get.toNamed(
+      '/delivery_details',
+      arguments: {'entrega': entrega, 'readOnly': false},
+    );
+  }
+
+  void _registrarNovaEntrega() {
+    // Navegar para página de registro de nova entrega
+    Get.toNamed('/register_delivery');
+  }
+
+  Widget _buildStatusChip(String status) {
+    bool isSelected = _statusFiltro.contains(status);
+
+    return FilterChip(
+      label: Text(status),
+      selected: isSelected,
+      onSelected: (selected) {
+        if (status == 'Todos') {
+          // Se selecionou "Todos", limpa outros filtros
+          _statusFiltro.value = ['Todos'];
+        } else {
+          // Remove "Todos" se selecionar algum status específico
+          _statusFiltro.remove('Todos');
+
+          if (selected) {
+            _statusFiltro.add(status);
+          } else {
+            _statusFiltro.remove(status);
+            // Se não sobrou nenhum filtro, volta para "Todos"
+            if (_statusFiltro.isEmpty) {
+              _statusFiltro.value = ['Todos'];
+            }
+          }
+        }
+      },
+      backgroundColor: Colors.grey[200],
+      selectedColor: AppTheme.loginPurple.withOpacity(0.2),
+      checkmarkColor: AppTheme.loginPurple,
+      labelStyle: TextStyle(
+        color: isSelected ? AppTheme.loginPurple : Colors.black87,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
+    );
+  }
+
+  List<Delivery> get _entregasFiltradas {
+    if (_statusFiltro.contains('Todos')) {
+      return _entregas;
+    }
+
+    return _entregas.where((e) => _statusFiltro.contains(e.status)).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text(
+          'Gerenciar Entregas',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: AppTheme.loginPurple,
+        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+        actions: const [
+          // Botão de perfil
+          ProfileButton(),
+        ],
+      ),
+      body: Column(
+        children: [
+          // Cabeçalho com total de entregas e filtros
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            color: Colors.white,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Obx(
+                  () => Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Total de entregas: ${_entregas.length}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.loginPurple,
+                        ),
+                      ),
+                      // Status de entregas
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.loginPurple.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Obx(
+                          () => Text(
+                            'Exibindo: ${_entregasFiltradas.length}',
+                            style: const TextStyle(
+                              color: AppTheme.loginPurple,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Chips de filtro por status
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    _buildStatusChip('Todos'),
+                    _buildStatusChip('Em trânsito'),
+                    _buildStatusChip('Entregue'),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Lista de entregas
+          Expanded(
+            child: Obx(() {
+              if (_isLoading.value) {
+                return const Center(
+                  child: CircularProgressIndicator(color: AppTheme.loginPurple),
+                );
+              }
+
+              final entregas = _entregasFiltradas;
+
+              if (entregas.isEmpty) {
+                return const Center(
+                  child: Text(
+                    'Nenhuma entrega registrada',
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                );
+              }
+
+              return ListView.builder(
+                itemCount: entregas.length,
+                itemBuilder: (context, index) {
+                  final entrega = entregas[index];
+                  return Card(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    child: ListTile(
+                      title: Text(
+                        'NF: ${entrega.nf} - ${entrega.cliente}',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Data: ${entrega.data}'),
+                          Row(
+                            children: [
+                              Text('Status: '),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _getStatusColor(entrega.status),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  entrega.status,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Text(
+                            'Smarter: ${entrega.comercianteNome ?? 'Não atribuído'}',
+                          ),
+                          Text('Tipo: ${entrega.tipoEntrega}'),
+                        ],
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (entrega.imagem != null)
+                            IconButton(
+                              icon: const Icon(
+                                Icons.image,
+                                color: AppTheme.loginPurple,
+                              ),
+                              onPressed: () {
+                                // Mostrar foto da entrega
+                                Get.dialog(
+                                  Dialog(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Image.network(entrega.imagem!),
+                                        TextButton(
+                                          onPressed: () => Get.back(),
+                                          child: const Text('Fechar'),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                              tooltip: 'Ver Foto',
+                            ),
+                          const Icon(Icons.arrow_forward_ios, size: 16),
+                        ],
+                      ),
+                      onTap: () => _verDetalhes(entrega),
+                    ),
+                  );
+                },
+              );
+            }),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _registrarNovaEntrega,
+        backgroundColor: AppTheme.loginPurple,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.add),
+        label: const Text('Nova Entrega'),
+      ),
+    );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'Entregue':
+        return Colors.green;
+      case 'Pendente':
+        return Colors.orange;
+      case 'Em trânsito':
+        return Colors.blue;
+      default:
+        return Colors.grey;
+    }
+  }
+}
