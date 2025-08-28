@@ -27,6 +27,7 @@ class _LogisticPageState extends State<LogisticPage> {
   }
 
   void _loadDeliveries() {
+    print('Carregando entregas');
     _isLoading.value = true;
 
     // Inscreve-se no stream de entregas do usuário logado (logística)
@@ -36,15 +37,15 @@ class _LogisticPageState extends State<LogisticPage> {
         _isLoading.value = false;
       },
       onError: (error) {
-        print('Erro ao carregar entregas: $error');
         _isLoading.value = false;
         Get.snackbar(
           'Erro',
-          'Não foi possível carregar as entregas',
+          'Não foi possível carregar as entregas ${error.toString()}',
           snackPosition: SnackPosition.TOP,
           backgroundColor: Colors.red,
           colorText: Colors.white,
         );
+        print('Erro ao carregar entregas: ${error.toString()}');
       },
     );
   }

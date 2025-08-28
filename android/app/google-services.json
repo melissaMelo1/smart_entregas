@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "735475675715",
-    "project_id": "smart-645d6",
-    "storage_bucket": "smart-645d6.firebasestorage.app"
+    "project_number": "399459899888",
+    "project_id": "smart-entregas-89f65",
+    "storage_bucket": "smart-entregas-89f65.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:735475675715:android:7e7359156fbd3d7fb25af6",
+        "mobilesdk_app_id": "1:399459899888:android:1ab1d8fbfce086f8066535",
         "android_client_info": {
           "package_name": "br.com.smart.entregas"
         }
@@ -15,26 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAcKQVxgFnEKktwe5igz4gURcpduWjC6ig"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:735475675715:android:dfd3d5856c26165bb25af6",
-        "android_client_info": {
-          "package_name": "com.example.smart_entregas"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyAcKQVxgFnEKktwe5igz4gURcpduWjC6ig"
+          "current_key": "AIzaSyAuiidvOBwDfyo06pS0njTWnwqO_jqY78w"
         }
       ],
       "services": {

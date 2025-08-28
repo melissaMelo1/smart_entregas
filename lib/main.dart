@@ -7,6 +7,8 @@ import 'package:smart_entregas/routes/app_pages.dart';
 import 'package:smart_entregas/services/user_session.dart';
 import 'package:smart_entregas/theme/app_theme.dart';
 import 'package:smart_entregas/views/login/phone_page.dart';
+import 'package:smart_entregas/widgets/app_scaffold.dart';
+import 'package:smart_entregas/widgets/version_badge.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,6 +43,16 @@ class MyApp extends StatelessWidget {
         initialRoute: _getInitialRoute(),
         getPages: AppPages.routes,
         debugShowCheckedModeBanner: false,
+        builder: (context, child) {
+          return Material(
+            child: Stack(
+              children: [
+                child ?? const SizedBox.shrink(),
+                const VersionBadge(),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
