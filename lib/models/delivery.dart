@@ -11,6 +11,7 @@ class Delivery {
   final String entregador;
   final String? horarioEntrega;
   final String userId; // ID do usuário que criou a entrega (logístico)
+  final String? nomeUsuarioLogistico; // Nome do usuário logístico que cadastrou
   final String? comercianteId; // ID do comerciante associado à entrega
   final String? comercianteNome; // Nome do comerciante para exibição
   final String? entregadorId; // ID do entregador associado à entrega
@@ -29,6 +30,7 @@ class Delivery {
     required this.entregador,
     this.horarioEntrega,
     required this.userId,
+    this.nomeUsuarioLogistico,
     this.comercianteId,
     this.comercianteNome,
     this.entregadorId,
@@ -48,6 +50,7 @@ class Delivery {
       'entregador': entregador,
       'horarioEntrega': horarioEntrega,
       'userId': userId,
+      'nomeUsuarioLogistico': nomeUsuarioLogistico,
       'comercianteId': comercianteId,
       'comercianteNome': comercianteNome,
       'entregadorId': entregadorId,
@@ -70,6 +73,7 @@ class Delivery {
       entregador: data['entregador'] ?? '',
       horarioEntrega: data['horarioEntrega'],
       userId: data['userId'] ?? '',
+      nomeUsuarioLogistico: data['nomeUsuarioLogistico'],
       comercianteId: data['comercianteId'],
       comercianteNome: data['comercianteNome'],
       entregadorId: data['entregadorId'],
@@ -90,6 +94,7 @@ class Delivery {
     String? entregador,
     String? horarioEntrega,
     String? userId,
+    String? nomeUsuarioLogistico,
     String? comercianteId,
     String? comercianteNome,
     String? entregadorId,
@@ -107,6 +112,7 @@ class Delivery {
       entregador: entregador ?? this.entregador,
       horarioEntrega: horarioEntrega ?? this.horarioEntrega,
       userId: userId ?? this.userId,
+      nomeUsuarioLogistico: nomeUsuarioLogistico ?? this.nomeUsuarioLogistico,
       comercianteId: comercianteId ?? this.comercianteId,
       comercianteNome: comercianteNome ?? this.comercianteNome,
       entregadorId: entregadorId ?? this.entregadorId,

@@ -24,8 +24,24 @@ class DeliveryService extends GetxService {
   }
 
   // Buscar entregas do usuário logado (para usuários logísticos)
+  // Se for logístico, mostra todas as entregas. Senão, apenas as do usuário.
   Stream<List<Delivery>> getUserDeliveries() {
     String userId = _userSession.currentUser.value?.uid ?? '';
+    String userType = _userSession.getUserType();
+
+    // Se for perfil logístico, retorna todas as entregas
+    if (userType == 'logistic') {
+      return _deliveriesCollection
+          .orderBy('data', descending: true)
+          .snapshots()
+          .map((snapshot) {
+            return snapshot.docs
+                .map((doc) => Delivery.fromSnapshot(doc))
+                .toList();
+          });
+    }
+
+    // Para outros perfis, retorna apenas as entregas do próprio usuário
     return _deliveriesCollection
         .where('userId', isEqualTo: userId)
         .orderBy('data', descending: true)
