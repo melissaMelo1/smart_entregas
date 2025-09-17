@@ -62,6 +62,30 @@ class _RegisterDeliveryPageState extends State<RegisterDeliveryPage> {
 
     _carregarComerciantes();
     _carregarEntregadores();
+
+    // Debug: Verificar o estado inicial do userData
+    _verificarDadosUsuario();
+  }
+
+  // Método para verificar e garantir que os dados do usuário estão carregados
+  void _verificarDadosUsuario() async {
+    print('DEBUG initState: userData atual: ${_userSession.userData}');
+    print(
+      'DEBUG initState: Nome no userData: ${_userSession.userData['nome']}',
+    );
+
+    // Se não tiver nome, tentar atualizar os dados
+    if (_userSession.userData['nome'] == null ||
+        _userSession.userData['nome'].toString().trim().isEmpty) {
+      print('DEBUG: Nome não encontrado, forçando atualização dos dados...');
+      try {
+        await _userSession.refreshUserData();
+        print('DEBUG após refresh: userData: ${_userSession.userData}');
+        print('DEBUG após refresh: Nome: ${_userSession.userData['nome']}');
+      } catch (e) {
+        print('DEBUG: Erro ao atualizar dados do usuário: $e');
+      }
+    }
   }
 
   @override
@@ -403,6 +427,14 @@ class _RegisterDeliveryPageState extends State<RegisterDeliveryPage> {
           return;
         }
 
+        // Debug: Verificar o estado do userData
+        print('DEBUG: userData completo: ${_userSession.userData}');
+        print('DEBUG: Nome no userData: ${_userSession.userData['nome']}');
+
+        // Usar o método mais robusto para obter o nome do usuário
+        final nomeLogistico = await _deliveryService.getCurrentUserName();
+        print('DEBUG: Nome do logístico que será salvo: $nomeLogistico');
+
         final delivery = Delivery(
           id: '',
           nf: _nfController.text.trim(),
@@ -412,9 +444,7 @@ class _RegisterDeliveryPageState extends State<RegisterDeliveryPage> {
           endereco: _enderecoController.text.trim(),
           entregador: _entregadorController.text.trim(),
           userId: userId, // ID do usuário logístico que cadastrou
-          nomeUsuarioLogistico:
-              _userSession.userData['nome'] ??
-              'Usuário não identificado', // Nome do logístico
+          nomeUsuarioLogistico: nomeLogistico, // Nome do logístico
           comercianteId:
               _comercianteId, // ID do comerciante que vai receber a entrega
           comercianteNome: _comercianteNome,

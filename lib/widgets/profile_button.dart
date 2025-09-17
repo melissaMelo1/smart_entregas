@@ -55,6 +55,20 @@ class ProfileButton extends StatelessWidget {
                     ),
                     const SizedBox(height: 15),
 
+                    // Nome do usuário
+                    Obx(
+                      () => Text(
+                        '${userSession.userData['nome'] ?? 'Nome não informado'}',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.loginPurple,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
                     // Telefone do usuário
                     Obx(
                       () => Text(
@@ -65,6 +79,7 @@ class ProfileButton extends StatelessWidget {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 4),
 
                     // Tipo de usuário
                     Obx(
@@ -109,6 +124,8 @@ class ProfileButton extends StatelessWidget {
       return 'Comercial';
     } else if (type == 'logistic') {
       return 'Logística';
+    } else if (type == 'delivery') {
+      return 'Entregador';
     } else {
       return 'Desconhecido';
     }

@@ -195,4 +195,36 @@ class DeliveryService extends GetxService {
               snapshot.docs.map((doc) => Delivery.fromSnapshot(doc)).toList(),
         );
   }
+
+  // Método para obter o nome do usuário atual (com fallback para Firestore)
+  Future<String> getCurrentUserName() async {
+    // Primeiro tentar pegar do UserSession
+    final nomeSession = _userSession.userData['nome'];
+    if (nomeSession != null && nomeSession.toString().trim().isNotEmpty) {
+      return nomeSession.toString().trim();
+    }
+
+    // Se não estiver no UserSession, buscar no Firestore
+    final userId = _userSession.currentUser.value?.uid;
+    if (userId == null) {
+      return 'Usuário não identificado';
+    }
+
+    try {
+      final userDoc = await _firestore.collection('users').doc(userId).get();
+      if (userDoc.exists) {
+        final userData = userDoc.data() as Map<String, dynamic>;
+        final nome = userData['nome'];
+        if (nome != null && nome.toString().trim().isNotEmpty) {
+          // Atualizar o UserSession com o nome encontrado
+          _userSession.userData['nome'] = nome;
+          return nome.toString().trim();
+        }
+      }
+    } catch (e) {
+      print('Erro ao buscar nome do usuário no Firestore: $e');
+    }
+
+    return 'Usuário não identificado';
+  }
 }
