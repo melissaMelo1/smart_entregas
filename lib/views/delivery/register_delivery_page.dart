@@ -43,7 +43,6 @@ class _RegisterDeliveryPageState extends State<RegisterDeliveryPage> {
   String? _comercianteId;
   String? _comercianteNome;
   String? _entregadorId;
-  String? _entregadorNome;
 
   // Opções de tipo de entrega
   final RxString _tipoEntrega = 'Motorista'.obs;
@@ -348,7 +347,6 @@ class _RegisterDeliveryPageState extends State<RegisterDeliveryPage> {
                       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                       onTap: () {
                         _entregadorId = entregador['id'];
-                        _entregadorNome = entregador['nome'];
                         _entregadorController.text = entregador['nome'];
                         Get.back();
                       },
@@ -414,6 +412,9 @@ class _RegisterDeliveryPageState extends State<RegisterDeliveryPage> {
           endereco: _enderecoController.text.trim(),
           entregador: _entregadorController.text.trim(),
           userId: userId, // ID do usuário logístico que cadastrou
+          nomeUsuarioLogistico:
+              _userSession.userData['nome'] ??
+              'Usuário não identificado', // Nome do logístico
           comercianteId:
               _comercianteId, // ID do comerciante que vai receber a entrega
           comercianteNome: _comercianteNome,

@@ -30,7 +30,7 @@ class _LogisticPageState extends State<LogisticPage> {
     print('Carregando entregas');
     _isLoading.value = true;
 
-    // Inscreve-se no stream de entregas do usuário logado (logística)
+    // Inscreve-se no stream de TODAS as entregas (perfil logística vê tudo)
     _deliveryService.getUserDeliveries().listen(
       (deliveries) {
         _entregas.value = deliveries;
@@ -138,7 +138,7 @@ class _LogisticPageState extends State<LogisticPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Total de entregas: ${_entregas.length}',
+                        'Total de entregas do sistema: ${_entregas.length}',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -197,7 +197,7 @@ class _LogisticPageState extends State<LogisticPage> {
               if (entregas.isEmpty) {
                 return const Center(
                   child: Text(
-                    'Nenhuma entrega registrada',
+                    'Nenhuma entrega registrada no sistema',
                     style: TextStyle(fontSize: 16, color: Colors.grey),
                   ),
                 );
@@ -247,6 +247,15 @@ class _LogisticPageState extends State<LogisticPage> {
                             'Smarter: ${entrega.comercianteNome ?? 'Não atribuído'}',
                           ),
                           Text('Tipo: ${entrega.tipoEntrega}'),
+                          if (entrega.nomeUsuarioLogistico != null)
+                            Text(
+                              'Cadastrado por: ${entrega.nomeUsuarioLogistico}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
                         ],
                       ),
                       trailing: Row(
