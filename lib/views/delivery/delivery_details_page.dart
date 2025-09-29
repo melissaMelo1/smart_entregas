@@ -433,22 +433,29 @@ class _DeliveryDetailsPageState extends State<DeliveryDetailsPage> {
         userType == 'delivery' &&
         _userSession.currentUser.value?.uid == _entrega.entregadorId;
 
-    // Verificar se é o comerciante relacionado à entrega
-    bool isAssignedCommercial =
-        userType == 'commercial' &&
-        _userSession.currentUser.value?.uid == _entrega.comercianteId;
-
     // Verificar se é o logístico que criou a entrega
     bool isLogisticCreator =
         userType == 'logistic' &&
         _userSession.currentUser.value?.uid == _entrega.userId;
 
-    // Determinar se pode editar (apenas logístico criador e não em modo somente leitura)
-    bool canEdit = !_readOnly && isLogisticCreator;
+    // Verificar se é uma entrega de transportadora
+    bool isTransportadoraDelivery = _entrega.tipoEntrega == 'Transportadora';
 
-    // Verificar se pode enviar comprovante (apenas entregador atribuído e status não é "Entregue")
+    // Logístico tem controle total em entregas de transportadora
+    bool logisticCanControlTransportadora =
+        userType == 'logistic' && isTransportadoraDelivery;
+    // Determinar se pode editar
+    // - Logístico criador (sempre)
+    // - Qualquer logístico para entregas de Transportadora
+    bool canEdit =
+        !_readOnly && (isLogisticCreator || logisticCanControlTransportadora);
+
+    // Verificar se pode enviar comprovante
+    // - Entregador atribuído (modo normal)
+    // - Qualquer logístico para entregas de Transportadora
     bool podeEnviarComprovante =
-        isAssignedDeliveryPerson && _entrega.status != 'Entregue';
+        (isAssignedDeliveryPerson || logisticCanControlTransportadora) &&
+        _entrega.status != 'Entregue';
 
     return Scaffold(
       backgroundColor: Colors.white,
