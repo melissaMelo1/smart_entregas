@@ -9,6 +9,8 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http;
 
 class DeliveryDetailsPage extends StatefulWidget {
   const DeliveryDetailsPage({super.key});
@@ -165,6 +167,57 @@ class _DeliveryDetailsPageState extends State<DeliveryDetailsPage> {
     }
   }
 
+  Future<void> _compartilharImagem(String imageUrl) async {
+    try {
+      // Mostrar loading
+      Get.dialog(
+        const Center(child: CircularProgressIndicator(color: Colors.white)),
+        barrierDismissible: false,
+      );
+
+      // Fazer download da imagem
+      final response = await http.get(Uri.parse(imageUrl));
+
+      if (response.statusCode == 200) {
+        // Obter diretório temporário
+        final tempDir = await getTemporaryDirectory();
+        final file = File(
+          '${tempDir.path}/comprovante_${_entrega.nf}_${DateTime.now().millisecondsSinceEpoch}.jpg',
+        );
+
+        // Salvar imagem no arquivo temporário
+        await file.writeAsBytes(response.bodyBytes);
+
+        // Fechar loading
+        Get.back();
+
+        // Compartilhar o arquivo de imagem
+        await Share.shareXFiles(
+          [XFile(file.path)],
+          text:
+              'Comprovante de Entrega - NF: ${_entrega.nf}\nCliente: ${_entrega.cliente}',
+          subject: 'Comprovante de Entrega',
+        );
+      } else {
+        Get.back();
+        throw Exception('Falha ao baixar a imagem');
+      }
+    } catch (e) {
+      // Fechar loading se ainda estiver aberto
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
+
+      Get.snackbar(
+        'Erro',
+        'Não foi possível compartilhar a imagem: ${e.toString()}',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
   void _visualizarImagem(String imageUrl) {
     Get.dialog(
       Dialog(
@@ -207,22 +260,7 @@ class _DeliveryDetailsPageState extends State<DeliveryDetailsPage> {
                       color: Colors.white,
                       size: 28,
                     ),
-                    onPressed: () async {
-                      try {
-                        await Share.share(
-                          'Comprovante de Entrega - NF: ${_entrega.nf}\n\n$imageUrl',
-                          subject: 'Comprovante de Entrega',
-                        );
-                      } catch (e) {
-                        Get.snackbar(
-                          'Erro',
-                          'Não foi possível compartilhar a imagem',
-                          snackPosition: SnackPosition.TOP,
-                          backgroundColor: Colors.red,
-                          colorText: Colors.white,
-                        );
-                      }
-                    },
+                    onPressed: () => _compartilharImagem(imageUrl),
                     tooltip: 'Compartilhar',
                   ),
                   const SizedBox(width: 8),
