@@ -5,6 +5,7 @@ import 'package:smart_entregas/services/delivery_service.dart';
 import 'package:smart_entregas/services/user_session.dart';
 import 'package:smart_entregas/theme/app_theme.dart';
 import 'package:smart_entregas/widgets/profile_button.dart';
+import 'package:share_plus/share_plus.dart';
 
 class LogisticPage extends StatefulWidget {
   const LogisticPage({super.key});
@@ -61,6 +62,128 @@ class _LogisticPageState extends State<LogisticPage> {
   void _registrarNovaEntrega() {
     // Navegar para página de registro de nova entrega
     Get.toNamed('/register_delivery');
+  }
+
+  void _visualizarImagem(Delivery entrega) {
+    Get.dialog(
+      Dialog(
+        backgroundColor: Colors.black,
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
+          children: [
+            // Imagem em tela cheia
+            Center(
+              child: InteractiveViewer(
+                child: Image.network(
+                  entrega.imagem!,
+                  fit: BoxFit.contain,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Center(
+                      child: CircularProgressIndicator(
+                        value:
+                            loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                : null,
+                        color: Colors.white,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            // Botões de ação
+            Positioned(
+              top: 40,
+              right: 16,
+              child: Row(
+                children: [
+                  // Botão de compartilhar
+                  IconButton(
+                    icon: const Icon(
+                      Icons.share,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                    onPressed: () async {
+                      try {
+                        await Share.share(
+                          'Comprovante de Entrega - NF: ${entrega.nf}\n\n${entrega.imagem}',
+                          subject: 'Comprovante de Entrega',
+                        );
+                      } catch (e) {
+                        Get.snackbar(
+                          'Erro',
+                          'Não foi possível compartilhar a imagem',
+                          snackPosition: SnackPosition.TOP,
+                          backgroundColor: Colors.red,
+                          colorText: Colors.white,
+                        );
+                      }
+                    },
+                    tooltip: 'Compartilhar',
+                  ),
+                  const SizedBox(width: 8),
+                  // Botão de fechar
+                  IconButton(
+                    icon: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                    onPressed: () => Get.back(),
+                    tooltip: 'Fechar',
+                  ),
+                ],
+              ),
+            ),
+            // Informações da entrega na parte inferior
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [Colors.black.withOpacity(0.8), Colors.transparent],
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'NF: ${entrega.nf}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      'Cliente: ${entrega.cliente}',
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                    if (entrega.horarioEntrega != null)
+                      Text(
+                        'Horário de Entrega: ${entrega.horarioEntrega}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildStatusChip(String status) {
@@ -175,6 +298,7 @@ class _LogisticPageState extends State<LogisticPage> {
                   spacing: 8,
                   children: [
                     _buildStatusChip('Todos'),
+                    _buildStatusChip('Pendente'),
                     _buildStatusChip('Em trânsito'),
                     _buildStatusChip('Entregue'),
                   ],
@@ -267,23 +391,7 @@ class _LogisticPageState extends State<LogisticPage> {
                                 Icons.image,
                                 color: AppTheme.loginPurple,
                               ),
-                              onPressed: () {
-                                // Mostrar foto da entrega
-                                Get.dialog(
-                                  Dialog(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Image.network(entrega.imagem!),
-                                        TextButton(
-                                          onPressed: () => Get.back(),
-                                          child: const Text('Fechar'),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
+                              onPressed: () => _visualizarImagem(entrega),
                               tooltip: 'Ver Foto',
                             ),
                           const Icon(Icons.arrow_forward_ios, size: 16),
