@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:smart_entregas/services/user_session.dart';
 import 'package:smart_entregas/utils/firebase_error_handler.dart';
 import '../models/auth_model.dart';
@@ -14,32 +15,107 @@ class AuthController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxString errorMessage = ''.obs;
 
+  // Verifica se o usuário está cadastrado na collection preRegister
+  Future<Map<String, dynamic>> _checkPreRegister(String phoneNumber) async {
+    try {
+      debugPrint('🔍 Iniciando verificação de preRegister para: $phoneNumber');
+      final firestore = FirebaseFirestore.instance;
+
+      // Buscar na collection preRegister pelo telefone
+      debugPrint('📞 Buscando no Firestore...');
+      final querySnapshot =
+          await firestore
+              .collection('preRegister')
+              .where('telefone', isEqualTo: phoneNumber)
+              .limit(1)
+              .get();
+
+      debugPrint('📊 Documentos encontrados: ${querySnapshot.docs.length}');
+
+      if (querySnapshot.docs.isEmpty) {
+        debugPrint('❌ Usuário não encontrado na collection preRegister');
+        return {'exists': false, 'active': false};
+      }
+
+      final doc = querySnapshot.docs.first;
+      final data = doc.data();
+      final isActive = data['ativo'] ?? false;
+
+      debugPrint('✅ Usuário encontrado! Ativo: $isActive');
+      debugPrint('📄 Dados do documento: $data');
+
+      return {'exists': true, 'active': isActive};
+    } catch (e) {
+      debugPrint('💥 Erro ao verificar preRegister: $e');
+      throw Exception('Erro ao verificar cadastro: $e');
+    }
+  }
+
   // Envia o código de verificação para o número de telefone
   Future<bool> sendVerificationCode(String phoneNumber) async {
+    debugPrint('🚀 Iniciando sendVerificationCode');
+    debugPrint('📱 Número recebido: $phoneNumber');
+
     isLoading.value = true;
     errorMessage.value = '';
 
     try {
       // Formatar o número de telefone se necessário
+      debugPrint('🔧 Formatando número de telefone...');
       final formattedPhoneNumber = _formatPhoneNumber(phoneNumber);
+      debugPrint('✅ Número formatado: $formattedPhoneNumber');
+
+      // Verificar se o usuário está cadastrado na collection preRegister
+      debugPrint('🔐 Verificando preRegister...');
+      final preRegisterCheck = await _checkPreRegister(formattedPhoneNumber);
+      debugPrint('📋 Resultado da verificação: $preRegisterCheck');
+
+      // Se não existe na collection preRegister
+      if (!preRegisterCheck['exists']) {
+        debugPrint('⛔ Usuário não existe na collection preRegister');
+        isLoading.value = false;
+        errorMessage.value = 'Usuário não cadastrado';
+        debugPrint('❌ Retornando false - usuário não cadastrado');
+        return false;
+      }
+
+      // Se existe mas está desativado
+      if (!preRegisterCheck['active']) {
+        debugPrint('⛔ Usuário existe mas está desativado');
+        isLoading.value = false;
+        errorMessage.value = 'Usuário desativado';
+        debugPrint('❌ Retornando false - usuário desativado');
+        return false;
+      }
+
+      // Se chegou aqui, o usuário está cadastrado e ativo - prosseguir com o envio do código
+      debugPrint('✅ Usuário autorizado! Prosseguindo com envio do código...');
 
       // Salvar o número de telefone no modelo
       authData.value = AuthModel(phoneNumber: formattedPhoneNumber);
+      debugPrint('💾 Número salvo no modelo');
 
       // Enviar o código de verificação
+      debugPrint('📤 Enviando código de verificação via Firebase Auth...');
       final verificationId = await _repository.sendVerificationCode(
         formattedPhoneNumber,
       );
+      debugPrint('✅ Código enviado! VerificationId: $verificationId');
 
       // Atualizar o modelo com o ID de verificação
       authData.value = authData.value.copyWith(verificationId: verificationId);
+      debugPrint('💾 VerificationId salvo no modelo');
 
       isLoading.value = false;
+      debugPrint('✅ Loading finalizado - retornando true');
       return true;
     } catch (e) {
+      debugPrint('💥 ERRO capturado no sendVerificationCode: $e');
+      debugPrint('📍 Stack trace: ${StackTrace.current}');
       isLoading.value = false;
       errorMessage.value = e.toString();
       FirebaseErrorHandler.showErrorMessage(e);
+      debugPrint('❌ Retornando false - erro na execução');
       return false;
     }
   }

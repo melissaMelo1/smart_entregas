@@ -31,29 +31,44 @@ class _PhonePageState extends State<PhonePage> {
   }
 
   void _sendVerificationCode() async {
+    print('🎯 _sendVerificationCode chamado no PhonePage');
     if (_formKey.currentState!.validate()) {
+      print('✅ Formulário validado');
+      print('📞 Número sem máscara: ${_phoneMaskFormatter.getUnmaskedText()}');
+      
+      print('⏳ Abrindo diálogo de loading...');
       Get.dialog(
         const Center(child: CircularProgressIndicator(color: Colors.white)),
         barrierDismissible: false,
       );
 
+      print('📡 Chamando authController.sendVerificationCode...');
       final result = await _authController.sendVerificationCode(
         _phoneMaskFormatter.getUnmaskedText(),
       );
+      print('📥 Resultado recebido: $result');
 
+      print('❌ Fechando diálogo de loading...');
       Get.back(); // Fecha o diálogo de carregamento
+      print('✅ Diálogo fechado');
 
       if (result) {
+        print('✅ Resultado true - navegando para OtpPage');
         Get.to(() => OtpPage());
       } else {
+        print('❌ Resultado false - exibindo mensagem de erro');
+        // Exibir o erro DEPOIS de fechar o loading
         Get.snackbar(
-          'Erro',
+          'Acesso Negado',
           _authController.errorMessage.value,
           snackPosition: SnackPosition.TOP,
           backgroundColor: Colors.red,
           colorText: Colors.white,
+          duration: const Duration(seconds: 3),
         );
       }
+    } else {
+      print('❌ Formulário não validado');
     }
   }
 
