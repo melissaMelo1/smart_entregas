@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:smart_entregas/models/delivery.dart';
 import 'package:smart_entregas/services/delivery_service.dart';
-import 'package:smart_entregas/services/user_session.dart';
 import 'package:smart_entregas/theme/app_theme.dart';
 import 'package:smart_entregas/widgets/profile_button.dart';
 import 'package:share_plus/share_plus.dart';
@@ -20,10 +19,9 @@ class LogisticPage extends StatefulWidget {
 
 class _LogisticPageState extends State<LogisticPage> {
   final DeliveryService _deliveryService = Get.put(DeliveryService());
-  final UserSession _userSession = Get.find<UserSession>();
   final RxList<Delivery> _entregas = <Delivery>[].obs;
   final RxBool _isLoading = true.obs;
-  final RxList<String> _statusFiltro = <String>['Todos'].obs;
+  final RxList<String> _statusFiltro = <String>['Em andamento'].obs;
 
   @override
   void initState() {
@@ -233,20 +231,21 @@ class _LogisticPageState extends State<LogisticPage> {
       label: Text(status),
       selected: isSelected,
       onSelected: (selected) {
-        if (status == 'Todos') {
-          // Se selecionou "Todos", limpa outros filtros
-          _statusFiltro.value = ['Todos'];
+        if (status == 'Todos' || status == 'Em andamento') {
+          // Se selecionou "Todos" ou "Em andamento", substitui todos os filtros
+          _statusFiltro.value = [status];
         } else {
-          // Remove "Todos" se selecionar algum status específico
+          // Remove "Todos" e "Em andamento" se selecionar algum status específico
           _statusFiltro.remove('Todos');
+          _statusFiltro.remove('Em andamento');
 
           if (selected) {
             _statusFiltro.add(status);
           } else {
             _statusFiltro.remove(status);
-            // Se não sobrou nenhum filtro, volta para "Todos"
+            // Se não sobrou nenhum filtro, volta para "Em andamento"
             if (_statusFiltro.isEmpty) {
-              _statusFiltro.value = ['Todos'];
+              _statusFiltro.value = ['Em andamento'];
             }
           }
         }
@@ -264,6 +263,13 @@ class _LogisticPageState extends State<LogisticPage> {
   List<Delivery> get _entregasFiltradas {
     if (_statusFiltro.contains('Todos')) {
       return _entregas;
+    }
+
+    if (_statusFiltro.contains('Em andamento')) {
+      // Em andamento inclui "Pendente" e "Em trânsito"
+      return _entregas
+          .where((e) => e.status == 'Pendente' || e.status == 'Em trânsito')
+          .toList();
     }
 
     return _entregas.where((e) => _statusFiltro.contains(e.status)).toList();
@@ -337,10 +343,9 @@ class _LogisticPageState extends State<LogisticPage> {
                 Wrap(
                   spacing: 8,
                   children: [
-                    _buildStatusChip('Todos'),
-                    _buildStatusChip('Pendente'),
-                    _buildStatusChip('Em trânsito'),
+                    _buildStatusChip('Em andamento'),
                     _buildStatusChip('Entregue'),
+                    _buildStatusChip('Todos'),
                   ],
                 ),
               ],
