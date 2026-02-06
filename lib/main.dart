@@ -5,6 +5,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:smart_entregas/routes/app_pages.dart';
 import 'package:smart_entregas/services/user_session.dart';
+import 'package:smart_entregas/services/update_service.dart';
 import 'package:smart_entregas/theme/app_theme.dart';
 import 'package:smart_entregas/views/login/phone_page.dart';
 import 'package:smart_entregas/widgets/app_scaffold.dart';
@@ -21,6 +22,9 @@ void main() async {
 
   // Registrar o serviço UserSession
   final userSession = Get.put(UserSession(), permanent: true);
+
+  // Registrar o serviço de Atualização
+  Get.put(UpdateService(), permanent: true);
 
   // Aguardar a inicialização dos dados do usuário
   await userSession.initialize();
